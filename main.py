@@ -1,5 +1,5 @@
 class CHIP8():
-    def __init__(self):
+    def __init__(self, rom):
         self.memory = [0] * 4096
         self.reg = [0] * 16
         self.pc = 0x200
@@ -9,15 +9,17 @@ class CHIP8():
         self.display = [0] * (64 * 32)
         self.stack = []
 
+        self.rom_installer(rom)
+
     def cycle(self):
         opcode = (self.memory[self.pc] * 2**8 + self.memory[self.pc+1]) # Same as doing (memory[pc] << 8) | memory[pc+1]
         self.pc += 2
 
-        #6NXX - Setting
+        #6XNN - Setting
         if (opcode & 0xF000) >> 12 == 6:
             self.reg[(opcode & 0x0F00) >> 8] = opcode & 0x00FF
 
-        #7NXX - Adding
+        #7XNN - Adding
         elif (opcode & 0xF000) >> 12 == 7:
             x = (opcode >> 8) & 0x0F
             self.reg[x] = (self.reg[x] + (opcode & 0xFF)) & 0xFF
@@ -56,44 +58,35 @@ class CHIP8():
                         else:
                             self.display[display_index] = 1
                 
-                    
+        # Call a subroutine
+        elif (opcode & 0xF000) >> 12 == 2:
+            self.stack.append(self.pc)
+            self.pc = opcode & 0x0FFF
+
+        # Exit a subroutine
+        elif opcode == 0x00EE:
+            self.pc = self.stack.pop()
+
+        elif (opcode & 0xF000) >> 12 == 3:
+            if self.reg[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF):
+                self.pc += 2
+
+
+    def rom_installer(self, rom):
+        with open(rom, 'rb') as data:
+            for i, b in enumerate(data.read()):
+                self.memory[i + 0x200] = b
 
 
     def run(self):
-        while self.memory[self.pc] != 0:
+        i = 0
+        while i < 100:
             self.cycle()
             #print(self.reg)
+            i += 1
             
 
 if __name__ == "__main__":
-    emu = CHIP8()
+    emu = CHIP8('1-chip8-logo.ch8')
 
-    # Set I = 0x300
-    emu.memory[0x200] = 0xA3
-    emu.memory[0x201] = 0x00
-
-    # Set V1 = 10
-    emu.memory[0x202] = 0x61
-    emu.memory[0x203] = 0x0A
-
-    # Set V2 = 6
-    emu.memory[0x204] = 0x62
-    emu.memory[0x205] = 0x06
-
-    # Draw a 3-row sprite at (V1, V2)
-    emu.memory[0x206] = 0xD1
-    emu.memory[0x207] = 0x23
-
-    # Draw the same sprite again
-    emu.memory[0x208] = 0xD1
-    emu.memory[0x209] = 0x23
-
-    # Sprite data
-    emu.memory[0x300] = 0b11110000
-    emu.memory[0x301] = 0b10010000
-    emu.memory[0x302] = 0b11110000
-
-    emu.run()
-    print(sum(emu.display))
-    print(emu.reg[15])
-
+    print(emu.memory)
