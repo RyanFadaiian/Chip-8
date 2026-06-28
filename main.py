@@ -73,6 +73,15 @@ class CHIP8():
             if self.reg[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF):
                 self.pc += 2
 
+        elif (opcode & 0xF000) >> 12 == 0xF and (opcode & 0x00FF) == 0x07:
+            self.reg[(opcode & 0x0F00) >> 8] = self.delay_timer
+
+        elif (opcode & 0xF000) >> 12 == 0xF and (opcode & 0x00FF) == 0x15:
+            self.delay_timer = self.reg[(opcode & 0x0F00) >> 8]
+
+        else:
+            print(hex(opcode))
+
 
     def rom_installer(self, rom):
         with open(rom, 'rb') as data:
@@ -80,48 +89,42 @@ class CHIP8():
                 self.memory[i + 0x200] = b
 
 
-    def run(self):
+    def run_cycles(self, count):
         i = 0
-        while i < 100:
+        while i < count:
             self.cycle()
-            #print(self.reg)
             i += 1
             
-"""
+
 if __name__ == "__main__":
-    emu = CHIP8('1-chip8-logo.ch8')
+    emu = CHIP8('octojam1title.ch8')
 
-    print(emu.memory)
-"""
+    pygame.init()
+    screen = pygame.display.set_mode((640, 320))
+    clock = pygame.time.Clock()
+    running = True
 
-emu = CHIP8('1-chip8-logo.ch8')
+    while running:
+        # poll for events
+        # pygame.QUIT event means the user clicked X to close your window
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-pygame.init()
-screen = pygame.display.set_mode((640, 320))
-clock = pygame.time.Clock()
-running = True
+        # fill the screen with a color to wipe away anything from last frame
+        screen.fill("purple")
 
-while running:
-    # poll for events
-    # pygame.QUIT event means the user clicked X to close your window
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+        # RENDER YOUR GAME HERE
+        emu.run_cycles(100)
 
-    # fill the screen with a color to wipe away anything from last frame
-    screen.fill("purple")
+        for x in range(64):
+            for y in range(32):
+                if emu.display[y * 64 + x] == 1:
+                    pygame.draw.rect(screen, (255, 255, 255), (x*10, y*10, 10, 10), 0)
 
-    # RENDER YOUR GAME HERE
-    emu.run()
+        # flip() the display to put your work on screen
+        pygame.display.flip()
 
-    for x in range(64):
-        for y in range(32):
-            if emu.display[y * 64 + x] == 1:
-                pygame.draw.rect(screen, (255, 255, 255), (x*10, y*10, 10, 10), 0)
+        clock.tick(60)  # limits FPS to 60
 
-    # flip() the display to put your work on screen
-    pygame.display.flip()
-
-    clock.tick(60)  # limits FPS to 60
-
-pygame.quit()
+    pygame.quit()
