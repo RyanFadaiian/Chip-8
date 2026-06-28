@@ -5,7 +5,7 @@ DISPLAY_HEIGHT = 32
 REGISTER_COUNT = 16
 
 
-class Chip8():
+class Chip8:
     def __init__(self, rom_path):
         self.memory = [0] * MEMORY_SIZE
         self.registers = [0] * REGISTER_COUNT
@@ -18,7 +18,14 @@ class Chip8():
 
         self.load_rom(rom_path)
 
+    def draw_sprite(self, x_register, y_register, height):
+        pass
+
     def cycle(self):
+        opcode, instruction, x, y, n, nn, nnn = self.fetch_opcode()
+        self.execute_opcode(opcode, instruction, x, y, n, nn, nnn)
+
+    def fetch_opcode(self):
         opcode = (self.memory[self.pc] << 8) | self.memory[self.pc + 1] # Same as doing self.memory[self.pc] * 2**8 + self.memory[self.pc+1]
         self.pc += 2
 
@@ -29,64 +36,68 @@ class Chip8():
         nn = opcode & 0xFF
         nnn = opcode & 0xFFF
 
+        return opcode, instruction, x, y, n, nn, nnn
+
+
+    def execute_opcode(self, opcode, instruction, x, y, n, nn, nnn):
+
+        #00E0 - Clear display
+        if opcode == 0x00E0:
+            self.display = [0] * (DISPLAY_WIDTH * DISPLAY_HEIGHT)
+
+        #00EE - Exit a subroutine
+        elif opcode == 0x00EE:
+            self.pc = self.stack.pop()
+
+        #1NNN - Switching to different Memory
+        elif instruction == 0x1:
+            self.pc = nnn
+
+        #2NNN - Call a subroutine
+        elif instruction == 2:
+            self.stack.append(self.pc)
+            self.pc = nnn
+
+        #3XNN - Skip next instruction if register has value nn
+        elif instruction == 3:
+            if self.registers[x] == nn:
+                self.pc += 2
+
         #6XNN - Setting register to a value
-        if instruction == 0x6:
+        elif instruction == 0x6:
             self.registers[x] = nn
 
         #7XNN - Adding
         elif instruction == 7:
             self.registers[x] = (self.registers[x] + nn) & 0xFF #0xFF is to make sure value is never over 255 aka wrap-around
 
-        
-        elif instruction == 0x7:
-            self.registers[x] = (self.registers[x] + nn) & 0xFF
-
-        #1XXX - Switching to different Memory
-        elif instruction == 0x1:
-            self.pc = nnn
-
         #ANNN - Set index to address NNN
         elif instruction == 0xA:
             self.index_register = nnn
-
-        #00E0 - Clear display
-        elif opcode == 0x00E0:
-            self.display = [0] * (64 * 32)
 
         #DXYN - Draw Sprite
         elif instruction == 0xD:
             start_x, start_y = self.registers[x], self.registers[y]
 
-            self.registers[15] = 0
+            self.registers[-1] = 0
             for row in range(n):
                 for bit in range(8):
-                    if (self.memory[self.index_register + row] >> (7 - bit)) & 1 == 1:
-                        screen_x = (start_x + bit) % 64
-                        screen_y = (start_y + row) % 32
+                    if (self.memory[self.index_register + row] >> (7 - bit)) & 1 == 1:  # Confusing Line
+                        screen_x = (start_x + bit) % DISPLAY_WIDTH
+                        screen_y = (start_y + row) % DISPLAY_HEIGHT
 
-                        display_index = screen_y * 64 + screen_x
+                        display_index = screen_y * DISPLAY_WIDTH + screen_x
                         if self.display[display_index] == 1:
                             self.display[display_index] = 0
                             self.registers[15] = 1
                         else:
                             self.display[display_index] = 1
-                
-        # Call a subroutine
-        elif instruction == 2:
-            self.stack.append(self.pc)
-            self.pc = nnn
-
-        # Exit a subroutine
-        elif opcode == 0x00EE:
-            self.pc = self.stack.pop()
-
-        elif instruction == 3:
-            if self.registers[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF):
-                self.pc += 2
-
+            
+        #FX07 - Save delay_timer to a register
         elif instruction == 0xF and nn == 0x07:
             self.registers[x] = self.delay_timer
 
+        #FX15 - Set delay_timer to a value from register
         elif instruction == 0xF and nn == 0x15:
             self.delay_timer = self.registers[x]
 
@@ -97,7 +108,7 @@ class Chip8():
     def load_rom(self, rom_path):
         with open(rom_path, 'rb') as data:
             for i, b in enumerate(data.read()):
-                self.memory[i + 0x200] = b
+                self.memory[i + PROGRAM_START] = b
 
 
     def run_cycles(self, count):

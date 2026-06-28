@@ -5,7 +5,7 @@ SCALE = 10
 FPS = 60
 CYCLES_PER_FRAME = 10
 
-if __name__ == "__main__":
+def main():
     emu = Chip8('1-chip8-logo.ch8')
 
     pygame.init()
@@ -18,14 +18,13 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 running = False
 
-
         # RENDER YOUR GAME HERE
         emu.run_cycles(CYCLES_PER_FRAME)
 
         screen.fill("purple")
 
-        for x in range(DISPLAY_WIDTH):
-            for y in range(DISPLAY_HEIGHT):
+        for y in range(DISPLAY_HEIGHT):
+            for x in range(DISPLAY_WIDTH):
                 if emu.display[y * DISPLAY_WIDTH + x]:
                     pygame.draw.rect(
                         screen,
@@ -37,3 +36,7 @@ if __name__ == "__main__":
         clock.tick(FPS)
 
     pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
