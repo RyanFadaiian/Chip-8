@@ -1,3 +1,5 @@
+import pygame
+
 class CHIP8():
     def __init__(self, rom):
         self.memory = [0] * 4096
@@ -85,8 +87,41 @@ class CHIP8():
             #print(self.reg)
             i += 1
             
-
+"""
 if __name__ == "__main__":
     emu = CHIP8('1-chip8-logo.ch8')
 
     print(emu.memory)
+"""
+
+emu = CHIP8('1-chip8-logo.ch8')
+
+pygame.init()
+screen = pygame.display.set_mode((640, 320))
+clock = pygame.time.Clock()
+running = True
+
+while running:
+    # poll for events
+    # pygame.QUIT event means the user clicked X to close your window
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # fill the screen with a color to wipe away anything from last frame
+    screen.fill("purple")
+
+    # RENDER YOUR GAME HERE
+    emu.run()
+
+    for x in range(64):
+        for y in range(32):
+            if emu.display[y * 64 + x] == 1:
+                pygame.draw.rect(screen, (255, 255, 255), (x*10, y*10, 10, 10), 0)
+
+    # flip() the display to put your work on screen
+    pygame.display.flip()
+
+    clock.tick(60)  # limits FPS to 60
+
+pygame.quit()
