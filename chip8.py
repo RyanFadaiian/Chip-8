@@ -63,6 +63,16 @@ class Chip8:
             if self.registers[x] == nn:
                 self.pc += 2
 
+        #4XNN - Skip next instruction if register != value nn
+        elif instruction == 4:
+            if self.registers[x] != nn:
+                self.pc += 2
+
+        #5XYN - Skip next instruction if Vx == Vy
+        elif instruction == 5:
+            if self.registers[x] == self.registers[y]:
+                self.pc += 2
+
         #6XNN - Setting register to a value
         elif instruction == 0x6:
             self.registers[x] = nn
@@ -70,6 +80,75 @@ class Chip8:
         #7XNN - Adding
         elif instruction == 7:
             self.registers[x] = (self.registers[x] + nn) & 0xFF #0xFF is to make sure value is never over 255 aka wrap-around
+
+        #8XY0 - Set Vx = Vy
+        elif instruction == 8 and n == 0:
+            self.registers[x] = self.registers[y]
+
+        #8XY1 - Set Vx = Vx (bitwise OR) Vy
+        elif instruction == 8 and n == 1:
+            self.registers[x] = self.registers[x] | self.registers[y]
+
+        #8XY2 - Set Vx = Vx (bitwise AND) Vy
+        elif instruction == 8 and n == 2:
+            self.registers[x] = self.registers[x] & self.registers[y]
+
+        #8XY3 - Set Vx = Vx (bitwise XOR) Vy
+        elif instruction == 8 and n == 2:
+            self.registers[x] = self.registers[x] ^ self.registers[y]
+
+        #8XY4 -
+        elif instruction == 8 and n == 4:
+            self.registers[x] += self.registers[y]
+
+            if self.registers[x] > 255:
+                self.registers[0xF] = 1
+                self.registers[x] = self.registers[x] & 0xFF
+            else:
+                self.registers[0xF] = 0
+
+
+        #8XY5
+        elif instruction == 8 and n == 5:
+            if self.registers[y] < self.registers[x]:
+                self.registers[0xF] = 1
+            else:
+                self.registers[0xF] = 0
+
+            self.registers[x] = (self.registers[x] - self.registers[y]) & 0xFF
+
+        #8XY6 - Divide Vx by 2
+        elif instruction == 8 and n == 6:
+            if self.registers[x] & 0b1 == 1:
+                self.registers[0xF] = 1
+            else:
+                self.registers[0xF] = 0
+
+            self.registers[x] = self.registers[x] >> 1
+
+
+        #8XY7 - 
+        elif instruction == 8 and n == 7:
+            if self.registers[y] > self.registers[x]:
+                self.registers[0xF] = 1
+            else:
+                self.registers[0xF] = 0
+
+            self.registers[x] = (self.registers[y] - self.registers[x]) & 0xFF
+
+        #8XYE
+        elif instruction == 8 and n == 0xE:
+            if (self.registers[x] >> 7) & 0b1 == 1:
+                self.registers[0xF] = 1
+            else:
+                self.registers[0xF] = 0
+
+            self.registers[x] = (self.registers[x] << 1) & 0xFF
+
+        #9XY0
+        elif instruction == 9:
+            if self.registers[x] != self.registers[y]:
+                self.pc += 2
 
         #ANNN - Set index to address NNN
         elif instruction == 0xA:
