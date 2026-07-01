@@ -20,9 +20,108 @@ class Chip8:
         self.keys = [False] * 16
 
         self.load_rom(rom_path)
+        self.initiate_font()
 
-    def draw_sprite(self, x_register, y_register, height):
-        pass
+    def initiate_font(self):
+        fonts = [
+            0b11110000,
+            0b10010000,
+            0b10010000,
+            0b10010000,
+            0b11110000,
+
+            0b00100000,
+            0b01100000,
+            0b00100000,
+            0b00100000,
+            0b01110000,
+
+            0b11110000,
+            0b00010000,
+            0b11110000,
+            0b10000000,
+            0b11110000,
+
+            0b11110000,
+            0b00010000,
+            0b11110000,
+            0b00010000,
+            0b11110000,
+
+            0b10010000,
+            0b10010000,
+            0b11110000,
+            0b00010000,
+            0b00010000,
+
+            0b11110000,
+            0b10000000,
+            0b11110000,
+            0b00010000,
+            0b11110000,
+
+            0b11110000,
+            0b10000000,
+            0b11110000,
+            0b10010000,
+            0b11110000,
+
+            0b11110000,
+            0b00010000,
+            0b00100000,
+            0b01000000,
+            0b01000000,
+
+            0b11110000,
+            0b10010000,
+            0b11110000,
+            0b10010000,
+            0b11110000,
+
+            0b11110000,
+            0b10010000,
+            0b11110000,
+            0b00010000,
+            0b11110000,
+
+            0b11110000,
+            0b10010000,
+            0b11110000,
+            0b10010000,
+            0b10010000,
+
+            0b11100000,
+            0b10010000,
+            0b11100000,
+            0b10010000,
+            0b11100000,
+
+            0b11110000,
+            0b10000000,
+            0b10000000,
+            0b10000000,
+            0b11110000,
+
+            0b11100000,
+            0b10010000,
+            0b10010000,
+            0b10010000,
+            0b11100000,
+
+            0b11110000,
+            0b10000000,
+            0b11110000,
+            0b10000000,
+            0b11110000,
+
+            0b11110000,
+            0b10000000,
+            0b11110000,
+            0b10000000,
+            0b10000000]
+
+        for i in range(80):
+            self.memory[0x50 + i] = fonts[i]
 
     def cycle(self):
         opcode, instruction, x, y, n, nn, nnn = self.fetch_opcode()
@@ -75,8 +174,8 @@ class Chip8:
             if self.registers[x] != nn:
                 self.pc += 2
 
-        #5XYN - Skip next instruction if Vx == Vy
-        elif instruction == 5:
+        #5XY0 - Skip next instruction if Vx == Vy
+        elif instruction == 5 and n == 0:
             if self.registers[x] == self.registers[y]:
                 self.pc += 2
 
@@ -153,7 +252,7 @@ class Chip8:
             self.registers[x] = (self.registers[x] << 1) & 0xFF
 
         #9XY0
-        elif instruction == 9:
+        elif instruction == 9 and n == 0:
             if self.registers[x] != self.registers[y]:
                 self.pc += 2
 
@@ -201,26 +300,56 @@ class Chip8:
         elif instruction == 0xF and nn == 0x07:
             self.registers[x] = self.delay_timer
 
+        #FX0A
+        elif instruction == 0xF and nn == 0x0A:
+            key_found = False
+
+            for i in range(len(self.keys)):
+                if self.keys[i]:
+                    self.registers[x] = i
+                    key_found = True
+                    break
+
+            if not key_found:
+                self.pc -= 2
+
         #FX15 - Set delay_timer to a value from register
         elif instruction == 0xF and nn == 0x15:
             self.delay_timer = self.registers[x]
 
-        else:
-            print(hex(opcode))
-
         #FX18
+        elif instruction == 0xF and nn == 0x18:
+            self.sound_timer = self.registers[x]
 
         #FX1E
-
+        elif instruction == 0xF and nn == 0x1E:
+            self.index_register += self.registers[x]
 
         #FX29
+        elif instruction == 0xF and nn == 0x29:
+            self.index_register = 0x50 + (self.registers[x] * 5)
 
         #FX33
+        elif instruction == 0xF and nn == 0x33:
+            value = self.registers[x]
+
+            self.memory[self.index_register] = value // 100
+            self.memory[self.index_register + 1] = (value // 10) % 10
+            self.memory[self.index_register + 2] = value % 10
+
 
         #FX55
+        elif instruction == 0xF and nn == 0x55:
+            for val, reg in enumerate(self.registers[0:x+1]):
+                self.memory[self.index_register + val] = reg
 
         #FX65
+        elif instruction == 0xF and nn == 0x65:
+            for i in range(x + 1):
+                self.registers[i] = self.memory[self.index_register + i]
 
+        else:
+            print(hex(opcode))
 
     def load_rom(self, rom_path):
         with open(rom_path, 'rb') as data:
