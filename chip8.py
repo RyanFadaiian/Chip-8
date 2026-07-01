@@ -1,3 +1,5 @@
+import random
+
 MEMORY_SIZE = 4096
 PROGRAM_START = 0x200
 DISPLAY_WIDTH = 64
@@ -15,6 +17,7 @@ class Chip8:
         self.sound_timer = 0
         self.display = [0] * (DISPLAY_WIDTH * DISPLAY_HEIGHT)
         self.stack = []
+        self.keys = [False] * 16
 
         self.load_rom(rom_path)
 
@@ -37,6 +40,10 @@ class Chip8:
         nnn = opcode & 0xFFF
 
         return opcode, instruction, x, y, n, nn, nnn
+
+
+    def set_inputs(self, keys_pressed):
+        self.keys = keys_pressed
 
 
     def execute_opcode(self, opcode, instruction, x, y, n, nn, nnn):
@@ -94,7 +101,7 @@ class Chip8:
             self.registers[x] = self.registers[x] & self.registers[y]
 
         #8XY3 - Set Vx = Vx (bitwise XOR) Vy
-        elif instruction == 8 and n == 2:
+        elif instruction == 8 and n == 3:
             self.registers[x] = self.registers[x] ^ self.registers[y]
 
         #8XY4 -
@@ -110,7 +117,7 @@ class Chip8:
 
         #8XY5
         elif instruction == 8 and n == 5:
-            if self.registers[y] < self.registers[x]:
+            if self.registers[y] <= self.registers[x]:
                 self.registers[0xF] = 1
             else:
                 self.registers[0xF] = 0
@@ -129,7 +136,7 @@ class Chip8:
 
         #8XY7 - 
         elif instruction == 8 and n == 7:
-            if self.registers[y] > self.registers[x]:
+            if self.registers[y] >= self.registers[x]:
                 self.registers[0xF] = 1
             else:
                 self.registers[0xF] = 0
@@ -154,6 +161,14 @@ class Chip8:
         elif instruction == 0xA:
             self.index_register = nnn
 
+        #BNNN
+        elif instruction == 0xB:
+            self.pc = (self.registers[0] + nnn)
+
+        #CXKK
+        elif instruction == 0xC:
+            self.registers[x] = random.randint(0, 255) & nn
+
         #DXYN - Draw Sprite
         elif instruction == 0xD:
             start_x, start_y = self.registers[x], self.registers[y]
@@ -172,6 +187,16 @@ class Chip8:
                         else:
                             self.display[display_index] = 1
             
+        #EX9E
+        elif instruction == 0xE and nn == 0x9E:
+            if self.keys[self.registers[x]] == True:
+                self.pc += 2
+
+        #EXA1
+        elif instruction == 0xE and nn == 0xA1:
+            if self.keys[self.registers[x]] == False:
+                self.pc += 2
+            
         #FX07 - Save delay_timer to a register
         elif instruction == 0xF and nn == 0x07:
             self.registers[x] = self.delay_timer
@@ -182,6 +207,19 @@ class Chip8:
 
         else:
             print(hex(opcode))
+
+        #FX18
+
+        #FX1E
+
+
+        #FX29
+
+        #FX33
+
+        #FX55
+
+        #FX65
 
 
     def load_rom(self, rom_path):
