@@ -7,8 +7,8 @@ CYCLES_PER_FRAME = 10
 
 def main():
     emu = Chip8('br8kout.ch8')
-    pygame.mixer.init()
-    beep_sound = pygame.mixer.Sound("beep.mp3")
+    #pygame.mixer.init()
+    #beep_sound = pygame.mixer.Sound("beep.mp3")
 
     pygame.init()
     screen = pygame.display.set_mode((DISPLAY_WIDTH * SCALE, DISPLAY_HEIGHT * SCALE))
