@@ -38,6 +38,13 @@ const builtInRoms = [
   { name: "Flight Runner", file: "flightrunner.ch8" },
   { name: "Snake", file: "snake.ch8" },
 ];
+const pyodideAdapter = `
+from chip8 import Chip8
+
+
+def create_emulator(rom_bytes):
+    return Chip8(rom_bytes=rom_bytes)
+`;
 
 let pyodide = null;
 let createEmulator = null;
@@ -247,12 +254,8 @@ async function boot() {
       if (!response.ok) throw new Error("Could not load shared chip8.py");
       return response.text();
     });
-    const adapterSource = await fetch("./chip8_browser.py").then((response) => {
-      if (!response.ok) throw new Error("Could not load Pyodide adapter");
-      return response.text();
-    });
     pyodide.FS.writeFile("chip8.py", chip8Source);
-    await pyodide.runPythonAsync(adapterSource);
+    await pyodide.runPythonAsync(pyodideAdapter);
     createEmulator = pyodide.globals.get("create_emulator");
     await loadBuiltInRom();
     requestAnimationFrame(runFrame);
