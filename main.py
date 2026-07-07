@@ -6,7 +6,7 @@ FPS = 60
 CYCLES_PER_FRAME = 10
 
 def main():
-    emu = Chip8('br8kout.ch8')
+    emu = Chip8('chip8-web/roms/br8kout.ch8')
     #pygame.mixer.init()
     #beep_sound = pygame.mixer.Sound("beep.mp3")
 
