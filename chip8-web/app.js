@@ -30,6 +30,7 @@ const fields = {
 };
 
 const chip8KeyLabels = ["X", "1", "2", "3", "Q", "W", "E", "A", "S", "D", "Z", "C", "4", "R", "F", "V"];
+const chip8KeyLayout = [0x1, 0x2, 0x3, 0xc, 0x4, 0x5, 0x6, 0xd, 0x7, 0x8, 0x9, 0xe, 0xa, 0x0, 0xb, 0xf];
 const keyMap = new Map(chip8KeyLabels.map((key, index) => [key.toLowerCase(), index]));
 
 let pyodide = null;
@@ -67,11 +68,11 @@ function buildRegisters() {
 
 function buildKeypad() {
   keysEl.replaceChildren();
-  chip8KeyLabels.forEach((label, index) => {
+  chip8KeyLayout.forEach((index) => {
     const key = document.createElement("div");
     key.id = `key-${index}`;
     key.className = "key";
-    key.innerHTML = `<span>${index.toString(16).toUpperCase()}</span><strong>${label}</strong>`;
+    key.innerHTML = `<span>${index.toString(16).toUpperCase()}</span><strong>${chip8KeyLabels[index]}</strong>`;
     keysEl.appendChild(key);
   });
 }

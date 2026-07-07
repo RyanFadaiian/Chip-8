@@ -97,6 +97,11 @@ h2 {
   align-items: start;
 }
 
+.play-area {
+  display: grid;
+  gap: 18px;
+}
+
 .screen-panel,
 .debug-panel,
 .keypad {
@@ -274,13 +279,13 @@ dd {
 }
 
 .keypad {
-  margin-top: 18px;
   padding: 16px;
+  width: min(100%, 360px);
 }
 
 .key-grid {
   display: grid;
-  grid-template-columns: repeat(16, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -316,9 +321,5 @@ dd {
 
   .emulator-grid {
     grid-template-columns: 1fr;
-  }
-
-  .key-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

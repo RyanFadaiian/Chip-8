@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CHIP-8 Pyodide Lab</title>
+    <title>CHIP-8 Visualizer</title>
     <link rel="stylesheet" href="./styles.css" />
     <script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
   </head>
@@ -12,41 +12,47 @@
       <section class="workspace">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Python core running in the browser</p>
-            <h1>CHIP-8 Pyodide Lab</h1>
+            <h1>CHIP-8 Visualizer</h1>
           </div>
           <div id="status" class="status">Loading Pyodide...</div>
         </header>
 
         <section class="emulator-grid">
-          <div class="screen-panel">
-            <canvas id="screen" width="640" height="320"></canvas>
-            <div class="controls">
-              <button id="runPause" type="button" disabled>Run</button>
-              <button id="step" type="button" disabled>Step</button>
-              <button id="stepFrame" type="button" disabled>Step Frame</button>
-              <button id="runToDraw" type="button" disabled>Run to Draw</button>
-              <button id="reset" type="button" disabled>Reset</button>
-              <label class="file-button">
-                Load ROM
-                <input id="romFile" type="file" accept=".ch8,.rom,application/octet-stream" />
-              </label>
+          <div class="play-area">
+            <div class="screen-panel">
+              <canvas id="screen" width="640" height="320"></canvas>
+              <div class="controls">
+                <button id="runPause" type="button" disabled>Run</button>
+                <button id="step" type="button" disabled>Step</button>
+                <button id="stepFrame" type="button" disabled>Step Frame</button>
+                <button id="runToDraw" type="button" disabled>Run to Draw</button>
+                <button id="reset" type="button" disabled>Reset</button>
+                <label class="file-button">
+                  Load ROM
+                  <input id="romFile" type="file" accept=".ch8,.rom,application/octet-stream" />
+                </label>
+              </div>
+              <div class="speed-row">
+                <label for="speed">Cycles/frame</label>
+                <input id="speed" type="range" min="1" max="40" value="10" />
+                <span id="speedValue">10</span>
+              </div>
+              <div class="speed-row">
+                <label for="debugRate">Debug updates</label>
+                <select id="debugRate">
+                  <option value="1000">1/sec</option>
+                  <option value="500">2/sec</option>
+                  <option value="200" selected>5/sec</option>
+                  <option value="100">10/sec</option>
+                  <option value="0">Every frame</option>
+                </select>
+              </div>
             </div>
-            <div class="speed-row">
-              <label for="speed">Cycles/frame</label>
-              <input id="speed" type="range" min="1" max="40" value="10" />
-              <span id="speedValue">10</span>
-            </div>
-            <div class="speed-row">
-              <label for="debugRate">Debug updates</label>
-              <select id="debugRate">
-                <option value="1000">1/sec</option>
-                <option value="500">2/sec</option>
-                <option value="200" selected>5/sec</option>
-                <option value="100">10/sec</option>
-                <option value="0">Every frame</option>
-              </select>
-            </div>
+
+            <section class="keypad">
+              <h2>Keypad</h2>
+              <div id="keys" class="key-grid"></div>
+            </section>
           </div>
 
           <aside class="debug-panel">
@@ -86,10 +92,6 @@
           </aside>
         </section>
 
-        <section class="keypad">
-          <h2>Keypad</h2>
-          <div id="keys" class="key-grid"></div>
-        </section>
       </section>
     </main>
 
