@@ -10,6 +10,7 @@ const stepButton = document.querySelector("#step");
 const stepFrameButton = document.querySelector("#stepFrame");
 const runToDrawButton = document.querySelector("#runToDraw");
 const resetButton = document.querySelector("#reset");
+const builtInRomInput = document.querySelector("#builtInRom");
 const romFileInput = document.querySelector("#romFile");
 const speedInput = document.querySelector("#speed");
 const speedValue = document.querySelector("#speedValue");
@@ -32,6 +33,11 @@ const fields = {
 const chip8KeyLabels = ["X", "1", "2", "3", "Q", "W", "E", "A", "S", "D", "Z", "C", "4", "R", "F", "V"];
 const chip8KeyLayout = [0x1, 0x2, 0x3, 0xc, 0x4, 0x5, 0x6, 0xd, 0x7, 0x8, 0x9, 0xe, 0xa, 0x0, 0xb, 0xf];
 const keyMap = new Map(chip8KeyLabels.map((key, index) => [key.toLowerCase(), index]));
+const builtInRoms = [
+  { name: "BR8KOUT", file: "br8kout.ch8" },
+  { name: "Flight Runner", file: "flightrunner.ch8" },
+  { name: "Snake", file: "snake.ch8" },
+];
 
 let pyodide = null;
 let createEmulator = null;
@@ -74,6 +80,16 @@ function buildKeypad() {
     key.className = "key";
     key.innerHTML = `<span>${index.toString(16).toUpperCase()}</span><strong>${chip8KeyLabels[index]}</strong>`;
     keysEl.appendChild(key);
+  });
+}
+
+function buildRomSelect() {
+  builtInRomInput.replaceChildren();
+  builtInRoms.forEach((rom) => {
+    const option = document.createElement("option");
+    option.value = rom.file;
+    option.textContent = rom.name;
+    builtInRomInput.appendChild(option);
   });
 }
 
@@ -186,9 +202,10 @@ function setControlsEnabled(enabled) {
   stepFrameButton.disabled = !enabled;
   runToDrawButton.disabled = !enabled;
   resetButton.disabled = !enabled;
+  builtInRomInput.disabled = !enabled;
 }
 
-function makeEmulator(bytes) {
+function makeEmulator(bytes, name = "ROM") {
   if (emulator) {
     emulator.destroy();
   }
@@ -203,19 +220,25 @@ function makeEmulator(bytes) {
   const snapshot = getSnapshot();
   drawDisplay(snapshot.display);
   renderDebug(snapshot);
-  setStatus(`Loaded ${romBytes.length} byte ROM`, "ready");
+  setStatus(`Loaded ${name} (${romBytes.length} bytes)`, "ready");
 }
 
-async function loadBuiltInRom() {
-  const response = await fetch("./roms/br8kout.ch8");
-  if (!response.ok) throw new Error("Could not load built-in ROM");
+async function loadBuiltInRom(file = builtInRomInput.value) {
+  const rom = builtInRoms.find((candidate) => candidate.file === file);
+  if (!rom) throw new Error("Unknown built-in ROM");
+
+  const response = await fetch(`./roms/${rom.file}`);
+  if (!response.ok) throw new Error(`Could not load ${rom.name}`);
   const buffer = await response.arrayBuffer();
-  makeEmulator(new Uint8Array(buffer));
+  builtInRomInput.value = rom.file;
+  romFileInput.value = "";
+  makeEmulator(new Uint8Array(buffer), rom.name);
 }
 
 async function boot() {
   buildRegisters();
   buildKeypad();
+  buildRomSelect();
   drawDisplay();
 
   try {
@@ -305,8 +328,19 @@ romFileInput.addEventListener("change", async (event) => {
   const [file] = event.target.files;
   if (!file) return;
   const buffer = await file.arrayBuffer();
-  makeEmulator(new Uint8Array(buffer));
-  setStatus(`Loaded ${file.name}`, "ready");
+  makeEmulator(new Uint8Array(buffer), file.name);
+});
+
+builtInRomInput.addEventListener("change", async () => {
+  if (!createEmulator) return;
+  running = false;
+  runPauseButton.textContent = "Run";
+  try {
+    await loadBuiltInRom();
+  } catch (error) {
+    console.error(error);
+    setStatus(error.message, "error");
+  }
 });
 
 speedInput.addEventListener("input", () => {

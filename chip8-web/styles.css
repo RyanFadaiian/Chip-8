@@ -136,6 +136,7 @@ canvas {
 
 button,
 .file-button,
+.select-field,
 select {
   display: inline-flex;
   align-items: center;
@@ -149,8 +150,27 @@ select {
   cursor: pointer;
 }
 
+.select-field {
+  gap: 8px;
+  padding-right: 8px;
+  color: #9fb1c2;
+}
+
 select {
   min-width: 120px;
+}
+
+.select-field select {
+  min-height: 30px;
+  padding: 0 8px;
+  border: 0;
+  color: #e8edf2;
+  background: transparent;
+}
+
+.select-field option {
+  color: #0b0d10;
+  background: #ffffff;
 }
 
 button:disabled {
