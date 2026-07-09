@@ -2,7 +2,7 @@
 
 A simple CHIP-8 emulator and visualizer built to learn how emulators work at a low level, and to help others see what is happening inside one. I made this project because I loved emulation as a kid, and wanted to better understand systems programming, CPU instructions, memory, registers, timers, graphics, and input. It started with pygame and expanded into a Pyodide-powered site that exposes the emulator's inner state while it runs.
 
-Live site: https://ryanfadaiian.github.io/Chip-8/
+Live site: https://ryanfadaiian.github.io/chip8-visualizer
 
 ## Features
 
