@@ -250,7 +250,7 @@ async function boot() {
 
   try {
     pyodide = await loadPyodide();
-    const chip8Source = await fetch("../src/chip8.py").then((response) => {
+    const chip8Source = await fetch("src/chip8.py").then((response) => {
       if (!response.ok) throw new Error("Could not load shared chip8.py");
       return response.text();
     });
